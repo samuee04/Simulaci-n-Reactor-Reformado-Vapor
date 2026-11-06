@@ -59,27 +59,27 @@ import matplotlib.pyplot as plt
 # ══════════════════════════════════════════════════════════════════════
 
 # --- Condiciones de operación ---
-T0   = 823.15        # Temperatura de entrada [K]  (~550 °C)
-P0   = 10.0 * 101325 # Presión de entrada [Pa]  (10 atm → Pa)
-R_g  = 8.314         # Constante de los gases [J/(mol·K)]
+T0   = 500 + 273.15        # Temperatura de entrada [K]  (~500 °C)
+P0   = 20.0 * 101325       # Presión de entrada [Pa]  (20 atm → Pa)
+R_g  = 8.314               # Constante de los gases [J/(mol·K)]
 
 # --- Constantes cinéticas HETEROGÉNEAS (a temperatura de referencia) ---
-T_ref = 823.15       # Temperatura de referencia para k y K_eq [K] (= T0)
-k1p_ref = 0.5        # k₁'(T_ref) [m³/(mol·kg_cat·s)]   (reacción 1)
-k2p_ref = 0.2        # k₂'(T_ref) [m³/(mol·kg_cat·s)]   (reacción 2)
+T_ref = 500 + 273.15       # Temperatura de referencia para k y K_eq [K] (= T0)
+k1p_ref = 2.92e-4        # k₁'(T_ref) [m³/(mol·kg_cat·s)]   (reacción 1)
+k2p_ref = 6.54e-2        # k₂'(T_ref) [m³/(mol·kg_cat·s)]   (reacción 2)
 
 # Energías de activación [J/mol]
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║  VALORES PLACEHOLDER — sustituir por datos reales del sistema  ║
 # ╚══════════════════════════════════════════════════════════════════╝
-E1 = 80000.0         # Energía de activación reacción 1 [J/mol]
-E2 = 60000.0         # Energía de activación reacción 2 [J/mol]
+E1 = 240100.0         # Energía de activación reacción 1 [J/mol]
+E2 = 67130.0          # Energía de activación reacción 2 [J/mol]
 
 # Constantes de equilibrio químico a T_ref
 # Para rxn 1: K_eq,1 = (C_C · C_D³) / (C_A · C_B)  →  unidades [(mol/m³)²]
 # Para rxn 2: K_eq,2 = (C_E · C_D)  / (C_C · C_B)  →  adimensional [-]
-K_eq1_ref = 5.0e4    # K_eq,1(T_ref) [(mol/m³)²]
-K_eq2_ref = 1.5      # K_eq,2(T_ref) [-]
+K_eq1_ref = 2.46    # K_eq,1(T_ref) [(mol/m³)²]
+K_eq2_ref = 4.86      # K_eq,2(T_ref) [-]
 
 # --- Entalpías de reacción (a T_ref) ---
 # ╔══════════════════════════════════════════════════════════════════╗
@@ -87,28 +87,28 @@ K_eq2_ref = 1.5      # K_eq,2(T_ref) [-]
 # ║  Positivo = endotérmica (consume calor)                        ║
 # ║  Negativo = exotérmica (libera calor)                          ║
 # ╚══════════════════════════════════════════════════════════════════╝
-DH_rxn1_ref =  206000.0  # ΔH_rxn1(T_ref) [J/mol]  (endotérmica, reformado)
-DH_rxn2_ref =  -41000.0  # ΔH_rxn2(T_ref) [J/mol]  (exotérmica moderada, shift)
+DH_rxn1_ref =  206100.0  # ΔH_rxn1(T_ref) [J/mol]  (endotérmica, reformado)
+DH_rxn2_ref =  -41200.0  # ΔH_rxn2(T_ref) [J/mol]  (exotérmica moderada, shift)
 
 # --- Caudales molares totales de ENTRADA al reactor ---
-FA0_total = 10.0     # [mol/s]  caudal molar de A (ej. CH4)
-FB0_total = 30.0     # [mol/s]  caudal molar de B (ej. H2O, relación vapor/carbono = 3:1)
-FC0_total = 0.0      # [mol/s]  caudal molar de C (ej. CO)
-FD0_total = 0.0      # [mol/s]  caudal molar de D (ej. H2)
-FE0_total = 0.0      # [mol/s]  caudal molar de E (ej. CO2)
+FA0_total = 60.0 / 3.6      # [mol/s]  caudal molar de A (ej. CH4)
+FB0_total = 200.0 / 3.6     # [mol/s]  caudal molar de B (ej. H2O, relación vapor/carbono = 3:1)
+FC0_total = 0.0 / 3.6       # [mol/s]  caudal molar de C (ej. CO)
+FD0_total = 0.0 / 3.6       # [mol/s]  caudal molar de D (ej. H2)
+FE0_total = 40.0 / 3.6      # [mol/s]  caudal molar de E (ej. CO2)
 
 # --- Dimensiones del reactor ---
-d_t = 0.05           # Diámetro interno de cada tubo [m]
-L   = 5.0            # Longitud de cada tubo [m]
-N_t = 100            # Número de tubos
+d_t = 0.10            # Diámetro interno de cada tubo [m]
+L   = 12.0            # Longitud de cada tubo [m]
+N_t = 400             # Número de tubos
 
 # --- Propiedades del catalizador ---
-delta   = 0.002      # Espesor de la capa catalítica en la pared [m]
-rho_cat = 2000.0     # Densidad del catalizador [kg/m³]
+delta   = 0.000065    # Espesor de la capa catalítica en la pared [m]
+rho_cat = 2100.0      # Densidad del catalizador [kg/m³]
 
 # --- Transferencia de calor externa ---
-U   = 50.0           # Coeficiente global de transf. de calor [W/(m²·K)]
-T_a = 1173.15        # Temperatura de los gases de combustión [K] (~900 °C)
+U   = 200             # Coeficiente global de transf. de calor [W/(m²·K)]
+T_a = 1100 + 273.15    # Temperatura de los gases de combustión [K] (~900 °C)
 
 # ══════════════════════════════════════════════════════════════════════
 # 2. CAPACIDADES CALORÍFICAS  Cp(T) = a + b·T + c·T²   [J/(mol·K)]
@@ -123,11 +123,11 @@ T_a = 1173.15        # Temperatura de los gases de combustión [K] (~900 °C)
 #
 #                   a [J/(mol·K)]    b [J/(mol·K²)]     c [J/(mol·K³)]
 Cp_coefs = {
-    'A': np.array([28.0,            1.5e-2,            -0.5e-5]),  # Especie A (ej. CH4)
-    'B': np.array([32.0,            1.0e-2,            -0.2e-5]),  # Especie B (ej. H2O)
-    'C': np.array([29.0,            0.8e-2,            -0.1e-5]),  # Especie C (ej. CO)
-    'D': np.array([27.0,            0.5e-2,            -0.1e-5]),  # Especie D (ej. H2)
-    'E': np.array([40.0,            2.5e-2,            -1.0e-5]),  # Especie E (ej. CO2)
+    'A': np.array([19.251,             5.21e-2,            1.20e-5]),  # Especie A (ej. CH4)
+    'B': np.array([32.243,             1.92e-3,            1.06e-5]),  # Especie B (ej. H2O)
+    'C': np.array([30.869,            -1.29e-2,            2.79e-5]),  # Especie C (ej. CO)
+    'D': np.array([27.133,            9.274e-3,           -1.38e-5]),  # Especie D (ej. H2)
+    'E': np.array([19.795,             7.34e-2,           -5.60e-5]),  # Especie E (ej. CO2)
 }
 
 
@@ -442,9 +442,6 @@ print(f"  {'E':<10} {FE_out:>18.6f}  {FE_out*N_t:>16.6f}")
 print("-" * 70)
 print(f"  Conversión de A:        X_A   = {XA_out*100:.4f} %")
 print(f"  Conversión de B:        X_B   = {XB_out*100:.4f} %")
-print(f"  Rendimiento de C (vs A): Y_C  = {FC_out/FA0*100:.4f} %")
-print(f"  Rendimiento de D (vs A): Y_D  = {FD_out/(3.0*FA0)*100:.4f} %")
-print(f"  Rendimiento de E (vs A): Y_E  = {FE_out/FA0*100:.4f} %")
 print("-" * 70)
 print(f"  Temperatura entrada:   T_in   = {T0:.2f} K  ({T0-273.15:.1f} °C)")
 print(f"  Temperatura salida:    T_out  = {T_out:.2f} K  ({T_out-273.15:.1f} °C)")
