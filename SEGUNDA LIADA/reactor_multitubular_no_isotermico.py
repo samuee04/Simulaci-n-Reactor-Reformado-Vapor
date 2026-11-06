@@ -1,7 +1,8 @@
 """
 REACTOR MULTITUBULAR CATALÍTICO — Fase Gaseosa NO ISOTÉRMICA con Calor Externo
 ================================================================================
-Catalizador depositado en la pared interna de cada tubo (wall-coated).
+Configuración: Reactor de Lecho Fijo Multitubular (Packed Bed Reactor, PBR).
+Partículas catalíticas empaquetadas en el interior de cada tubo.
 
 Estequiometría del sistema reactivo:
   Reacción 1:  A + B ⇌ C + 3D    (r₁' = k₁'·[C_A·C_B − C_C·C_D³ / K_eq,1])
@@ -18,10 +19,12 @@ Sistema de EDOs acoplado:
     dF_E/dW =  r₂'
 
     dT/dW   = [Q̇_transf + Σ(−ΔH_rxn,r · r_r')] / [Σ Fⱼ · Cp,j(T)]
-              donde Q̇_transf = U · a · (T_a − T)
+              donde Q̇_transf = U · a · (T_a − T) = Ua_esp · (T_a − T)
 
 Transferencia de calor externa:  Q̇ = U · a · (Tₐ − T)
-    donde a = área de transferencia por unidad de masa de catalizador [m²/kg]
+    donde a = área de transferencia por unidad de masa de catalizador [m²/kg_cat]
+    a = A_lat / W_tubo = 4.0 / (rho_b · d_t)
+    Ua_esp = U · a  [W/(kg_cat·K)]
 
 Estequiometría:  Cⱼ = (Fⱼ / F_T) · (P / R·T)
 
@@ -31,7 +34,7 @@ Hipótesis:
     - Las constantes de equilibrio siguen van 't Hoff:
         K_eq(T) = K_eq(T_ref) · exp[−ΔH_rxn/R · (1/T − 1/T_ref)]
 
-Referencias: Fogler (2020), Xu & Froment (1989), Martín (2016).
+Referencias: Fogler (2020), Xu & Froment (1989), Akers & Camp (1955), Martín (2016, 2022).
 
 ══════════════════════════════════════════════════════════════════════
   LEYENDA DE VARIABLES
@@ -97,18 +100,18 @@ FC0_total = 0.0 / 3.6       # [mol/s]  caudal molar de C (ej. CO)
 FD0_total = 0.0 / 3.6       # [mol/s]  caudal molar de D (ej. H2)
 FE0_total = 40.0 / 3.6      # [mol/s]  caudal molar de E (ej. CO2)
 
-# --- Dimensiones del reactor ---
-d_t = 0.10            # Diámetro interno de cada tubo [m]
-L   = 12.0            # Longitud de cada tubo [m]
-N_t = 400             # Número de tubos
+# --- Dimensiones del reactor y propiedades del lecho fijo (INPUTS) ---
+d_t = 0.10          # Diámetro interno del tubo [m] (10.00 cm)
+L   = 12.00         # Longitud del tubo [m]
+N_t = 200           # Número de tubos [-]
 
-# --- Propiedades del catalizador ---
-delta   = 0.000065    # Espesor de la capa catalítica en la pared [m]
-rho_cat = 2100.0      # Densidad del catalizador [kg/m³]
+rho_cat = 2100.0    # Densidad de la partícula catalítica [kg_cat/m³_sólido] (Akers & Camp, 1955)
+phi     = 0.528     # Porosidad o fracción de hueco del lecho [-] (Xu & Froment, 1989)
+                    # Nota: usar phi = 0.40 si se asume empaquetamiento estándar (Fogler, 2020)
 
 # --- Transferencia de calor externa ---
-U   = 200             # Coeficiente global de transf. de calor [W/(m²·K)]
-T_a = 1100 + 273.15    # Temperatura de los gases de combustión [K] (~900 °C)
+U   = 200.0         # Coeficiente global de transferencia de calor [W/(m²·K)]
+T_a = 1173.15       # Temperatura de los gases de combustión [K]
 
 # ══════════════════════════════════════════════════════════════════════
 # 2. CAPACIDADES CALORÍFICAS  Cp(T) = a + b·T + c·T²   [J/(mol·K)]
@@ -164,25 +167,33 @@ Delta_Cp_coefs_rxn2 = (  1 * Cp_coefs['E']
 
 
 # ══════════════════════════════════════════════════════════════════════
-# 3. CÁLCULOS GEOMÉTRICOS Y DE CATALIZADOR
+# 2. SECUENCIA ORDENADA DE CÁLCULO (GEOMETRÍA, CATALIZADOR Y ÁREA 'a')
 # ══════════════════════════════════════════════════════════════════════
 
-# Volumen por tubo y total
-V_tubo  = (np.pi * d_t**2 * L) / 4.0      # [m³]
-V_total = N_t * V_tubo                      # [m³]
+# Paso 1: Área transversal de paso por tubo [m²] (Martín, 2016)
+A_c = (np.pi * d_t**2) / 4.0
 
-# Masa de catalizador
-W_total = N_t * np.pi * d_t * L * delta * rho_cat   # [kg]
-W_tubo  = np.pi * d_t * L * delta * rho_cat          # [kg] por tubo
+# Paso 2: Volumen por tubo y volumen total del reactor [m³] (Fogler, 2020)
+V_tubo = A_c * L
+V_total = N_t * V_tubo
 
-# Densidad aparente del lecho
-rho_b = 4.0 * rho_cat * delta / d_t   # [kg/m³]
+# Paso 3: Área lateral de intercambio térmico por tubo [m²] (Martín, 2022)
+A_lat = np.pi * d_t * L
+A_lat_tubo = A_lat
 
-# Área lateral interna por tubo (superficie de transferencia de calor)
-A_lat_tubo = np.pi * d_t * L   # [m²]
+# Paso 4: Densidad aparente del lecho fijo [kg_cat/m³_reactor] (Fogler, 2020)
+rho_b = rho_cat * (1.0 - phi)
 
-# Área de transferencia por unidad de masa de catalizador [m²/kg_cat]
-a_especifica = A_lat_tubo / W_tubo  # [m²/kg_cat]
+# Paso 5: Masa de catalizador por tubo y total [kg_cat] (Fogler, 2020; Martín, 2016)
+W_tubo = rho_b * V_tubo
+W_total = N_t * W_tubo
+
+# Paso 6: Área específica de transferencia de calor por masa catalítica [m²/kg_cat] (Martín, 2022)
+a = A_lat / W_tubo          # Equivalente exacto a: a = 4.0 / (rho_b * d_t)
+a_especifica = a
+
+# Término agrupado de transferencia de calor por unidad de masa [W/(kg_cat·K)] (Martín, 2022)
+Ua_esp = U * a              # Equivale a (4 * U) / (rho_b * d_t) = 8.0710 W/(kg_cat·K)
 
 # Caudales de entrada POR TUBO
 FA0 = FA0_total / N_t
@@ -196,7 +207,7 @@ CT0 = P0 / (R_g * T0)    # [mol/m³]
 
 print("=" * 70)
 print("    REACTOR MULTITUBULAR CATALÍTICO — NO ISOTÉRMICO")
-print("    Reacciones: A + B <-> C + 3D ; C + B <-> E + D")
+print("    Lecho Fijo (PBR) — Reacciones: A + B <-> C + 3D ; C + B <-> E + D")
 print("    Balance de Energía con Calentamiento Externo")
 print("=" * 70)
 print(f"  Temperatura de entrada     T_in  = {T0:.2f} K  ({T0-273.15:.1f} °C)")
@@ -213,17 +224,19 @@ print("-" * 70)
 print(f"  Diametro del tubo        d_t     = {d_t*100:.2f} cm")
 print(f"  Longitud del tubo          L     = {L:.2f} m")
 print(f"  Número de tubos          N_t     = {N_t}")
-print(f"  Volumen por tubo       V_tubo    = {V_tubo*1e6:.2f} cm³  ({V_tubo:.6f} m³)")
-print(f"  Volumen total          V_total   = {V_total*1e3:.4f} dm³  ({V_total:.6f} m³)")
+print(f"  Area transversal paso    A_c     = {A_c*1e4:.2f} cm2  ({A_c:.6f} m2)")
+print(f"  Volumen por tubo       V_tubo    = {V_tubo*1e3:.4f} dm3  ({V_tubo:.6f} m3)")
+print(f"  Volumen total          V_total   = {V_total*1e3:.4f} dm3  ({V_total:.6f} m3)")
 print("-" * 70)
-print(f"  Espesor capa catalitica  delta   = {delta*1000:.2f} mm")
-print(f"  Densidad catalizador   rho_cat   = {rho_cat:.0f} kg/m³")
-print(f"  Densidad aparente        rho_b   = {rho_b:.2f} kg/m³")
-print(f"  Masa cat. por tubo     W_tubo    = {W_tubo:.4f} kg")
-print(f"  Masa cat. total        W_total   = {W_total:.4f} kg")
+print(f"  Densidad cat. solido   rho_cat   = {rho_cat:.0f} kg_cat/m3_solido")
+print(f"  Porosidad del lecho      phi     = {phi:.3f} (fraccion de hueco)")
+print(f"  Densidad aparente lecho  rho_b   = {rho_b:.2f} kg_cat/m3_reactor")
+print(f"  Masa cat. por tubo     W_tubo    = {W_tubo:.4f} kg_cat")
+print(f"  Masa cat. total        W_total   = {W_total:.4f} kg_cat")
 print("-" * 70)
-print(f"  Area lateral por tubo  A_lat     = {A_lat_tubo:.4f} m2")
-print(f"  Area especifica          a       = {a_especifica:.4f} m2/kg_cat")
+print(f"  Area lateral por tubo  A_lat     = {A_lat:.4f} m2")
+print(f"  Area especifica          a       = {a:.4f} m2/kg_cat")
+print(f"  Termino agrupado U*a   Ua_esp    = {Ua_esp:.4f} W/(kg_cat*K)")
 print("-" * 70)
 print(f"  U (coef. global)                 = {U:.1f} W/(m2*K)")
 print(f"  T_a (gases combustion)           = {T_a:.2f} K  ({T_a-273.15:.1f} C)")
@@ -314,7 +327,7 @@ def sistema_EDO(W, y):
 
     # ─── Balance de energía: dT/dW ───
     # Calor transferido desde el exterior [W/kg_cat = J/(s·kg_cat)]
-    Q_dot = U * a_especifica * (T_a - T)
+    Q_dot = Ua_esp * (T_a - T)
 
     # Entalpías de reacción corregidas con T (ley de Kirchhoff)
     DH_rxn1 = DH_rxn_T(DH_rxn1_ref, T, T_ref, Delta_Cp_coefs_rxn1)
@@ -407,7 +420,7 @@ xi_1_total = xi_1_tubo * N_t    # [mol/s]  avance total rxn 1
 xi_2_total = xi_2_tubo * N_t    # [mol/s]  avance total rxn 2
 
 # Potencia térmica transferida al tubo (integrada numéricamente)
-Q_perfil = U * a_especifica * (T_a - T_arr)   # [W/kg_cat] perfil
+Q_perfil = Ua_esp * (T_a - T_arr)   # [W/kg_cat] perfil
 Q_ext_tubo = np.trapezoid(Q_perfil, W_arr)         # [W] por tubo
 Q_ext_total = Q_ext_tubo * N_t                  # [W] total reactor
 
@@ -460,9 +473,9 @@ print("=" * 70)
 
 fig, axes = plt.subplots(2, 2, figsize=(14, 10))
 fig.suptitle(
-    'Reactor Multitubular Catalítico — No Isotérmico con Calor Externo\n'
+    'Reactor Multitubular Catalítico de Lecho Fijo (PBR) — No Isotérmico con Calor Externo\n'
     r'Reacciones: $A + B \rightleftharpoons C + 3D$  ;  $C + B \rightleftharpoons E + D$' + '\n'
-    rf'$W_{{tubo}}$ = {W_tubo:.4f} kg,  $\rho_b$ = {rho_b:.1f} kg/m³,  '
+    rf'$W_{{tubo}}$ = {W_tubo:.2f} kg,  $\rho_b$ = {rho_b:.1f} kg/m³,  $\phi$ = {phi:.3f},  '
     rf'$U$ = {U:.0f} W/(m²·K),  $T_a$ = {T_a-273.15:.0f} °C',
     fontsize=13, fontweight='bold'
 )
