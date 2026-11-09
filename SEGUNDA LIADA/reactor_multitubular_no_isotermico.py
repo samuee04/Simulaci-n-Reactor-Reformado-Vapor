@@ -72,9 +72,6 @@ k1p_ref = 2.92e-4        # k₁'(T_ref) [m³/(mol·kg_cat·s)]   (reacción 1)
 k2p_ref = 6.54e-2        # k₂'(T_ref) [m³/(mol·kg_cat·s)]   (reacción 2)
 
 # Energías de activación [J/mol]
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║  VALORES PLACEHOLDER — sustituir por datos reales del sistema  ║
-# ╚══════════════════════════════════════════════════════════════════╝
 E1 = 240100.0         # Energía de activación reacción 1 [J/mol]
 E2 = 67130.0          # Energía de activación reacción 2 [J/mol]
 
@@ -85,11 +82,6 @@ K_eq1_ref = 2.46    # K_eq,1(T_ref) [(mol/m³)²]
 K_eq2_ref = 4.86      # K_eq,2(T_ref) [-]
 
 # --- Entalpías de reacción (a T_ref) ---
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║  VALORES PLACEHOLDER — sustituir por datos reales del sistema  ║
-# ║  Positivo = endotérmica (consume calor)                        ║
-# ║  Negativo = exotérmica (libera calor)                          ║
-# ╚══════════════════════════════════════════════════════════════════╝
 DH_rxn1_ref =  206100.0  # ΔH_rxn1(T_ref) [J/mol]  (endotérmica, reformado)
 DH_rxn2_ref =  -41200.0  # ΔH_rxn2(T_ref) [J/mol]  (exotérmica moderada, shift)
 
@@ -103,7 +95,7 @@ FE0_total = 40.0 / 3.6      # [mol/s]  caudal molar de E (ej. CO2)
 # --- Dimensiones del reactor y propiedades del lecho fijo (INPUTS) ---
 d_t = 0.10          # Diámetro interno del tubo [m] (10.00 cm)
 L   = 12.00         # Longitud del tubo [m]
-N_t = 200           # Número de tubos [-]
+N_t = 50           # Número de tubos [-]
 
 rho_cat = 2100.0    # Densidad de la partícula catalítica [kg_cat/m³_sólido] (Akers & Camp, 1955)
 phi     = 0.528     # Porosidad o fracción de hueco del lecho [-] (Xu & Froment, 1989)
@@ -111,19 +103,13 @@ phi     = 0.528     # Porosidad o fracción de hueco del lecho [-] (Xu & Froment
 
 # --- Transferencia de calor externa ---
 U   = 200.0         # Coeficiente global de transferencia de calor [W/(m²·K)]
-T_a = 1173.15       # Temperatura de los gases de combustión [K]
+T_a = 900 + 273.15       # Temperatura de los gases de combustión [K]
 
 # ══════════════════════════════════════════════════════════════════════
 # 2. CAPACIDADES CALORÍFICAS  Cp(T) = a + b·T + c·T²   [J/(mol·K)]
 # ══════════════════════════════════════════════════════════════════════
-#
+
 # Coeficientes polinómicos genéricos (tipo NIST/Shomate simplificado)
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║  VALORES PLACEHOLDER — sustituir por datos reales de cada      ║
-# ║  especie concreta del sistema de reacción.                     ║
-# ║  Formato:  Cp_j(T) = a_j + b_j·T + c_j·T²  [J/(mol·K)]      ║
-# ╚══════════════════════════════════════════════════════════════════╝
-#
 #                   a [J/(mol·K)]    b [J/(mol·K²)]     c [J/(mol·K³)]
 Cp_coefs = {
     'A': np.array([19.251,             5.21e-2,            1.20e-5]),  # Especie A (ej. CH4)
